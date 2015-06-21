@@ -16,79 +16,6 @@ describe('dual engine.io', function () {
         socket = io.socket();
     });
 
-    it('should send index event on connect', function (done) {
-        socket.sideB.on('dual', function (msg) {
-            assert.deepEqual(msg.to, ['index']);
-            done();
-        });
-        d.engineio(socket.sideA);
-    });
-
-
-    it('should send second argument has from', function (done) {
-        socket.sideB.on('dual', function (msg) {
-            assert.deepEqual(msg.from, ['robinhood']);
-            done();
-        });
-        d.engineio(socket.sideA, ['robinhood']);
-    });
-
-    it('should allow clients to send to mounted hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
-            done();
-        });
-
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-            });
-        });
-        d.engineio(socket.sideA);
-    });
-
-    it('should include "from" as tail in messages to hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
-            assert.equal('merci', _.last(msg.from));
-            done();
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-                , from: ['merci']
-            });
-        });
-        d.engineio(socket.sideA);
-    });
-
-    it('should include "body" in messages to hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
-            assert.deepEqual({ hello: 'hi' }, msg.body)
-            done();
-        });
-
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-                , body: { hello: 'hi' }
-            });
-        });
-        d.engineio(socket.sideA);
-    });
-
-    it('should include "option" in messages to hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
-            assert.deepEqual({ allo: 'salaam' }, msg.options)
-            done();
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-                , option: { allo: 'salaam' }
-            });
-        });
-        d.engineio(socket.sideA);
-    });
-
     it('should call second argument on incoming messages', function (done) {
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
@@ -260,7 +187,7 @@ describe('dual engine.io', function () {
         });
     });
 
-    it('should give each client a unique "from" address ', function (done) {
+    it('should reuse "from" address from clients', function (done) {
         var count = 0;
         var from;
         d.mount(['dalek'], function (msg) {
@@ -268,8 +195,7 @@ describe('dual engine.io', function () {
             if (count === 1) {
                 from = msg.from;
             } else if (count === 2) {
-                assert.deepEQual(from, from);
-                assert.notDeepEqual(from, msg.from);
+                assert.deepEqual(from, msg.from);
                 done();
             }
         });
@@ -284,107 +210,7 @@ describe('dual engine.io', function () {
             d.engineio(asocket.sideA);
         };
         testSocket(socket);
-        testSocket(io.socket());
-    });
-
-    it('should send to "disconnect" when a client disconnects', function (done) {
-        var disconnected = false;
-        d.mount(['disconnect', '**'], function () {
-            assert(disconnected);
-            done();
-        });
-        d.mount(['dalek'], function (msg) {
-            socket.disconnect();
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-            });
-        });
-        d.engineio(socket.sideA);
-    });
-
-    it('should send with "disconnect" and the connections from prefix', function (done) {
-        var disconnected = false;
-        d.mount(['disconnect', '**'], function () {
-            assert(disconnected);
-            done();
-        });
-        d.mount(['dalek'], function (msg) {
-            socket.disconnect();
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-            });
-        });
-        d.engineio(socket.sideA);
-    });
-
-
-    it('should send a disconnect message when client disconnects', function (done) {
-        var c = clientpool(dualapi(), ['robinhood']);
-        var clientRoute;
-        c.mount(['identify'], function (ctxt) {
-            c.mount(['disconnect'].concat(ctxt.from), function (ctxt) {
-                done();
-            });
-        });
-
-        var socket = io.socket();
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['identify']
-                , from: []
-                , body: null
-            });
-            socket.sideB.emit('disconnect');
-        });
-        c.connect(socket.sideA);
-    });
-
-    it('should send a connect event client connects', function (done) {
-        var c = clientpool(dualapi(), ['robinhood']);
-        var clientroute;
-
-        c.mount(['connect', '**'], function (ctxt) {
-            clientroute = ctxt.to.slice(1);
-        });
-
-        c.mount(['identify'], function (ctxt) {
-            assert.deepEqual(ctxt.from, clientroute);
-            done();
-        });
-
-        var socket = io.socket();
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['identify']
-                , from: []
-                , body: null
-            });
-        });
-        c.connect(socket.sideA);
-    });
-
-    it('should respond with redirect event when connected with redirect client', function (done) {
-        var c = clientpool(dualapi(), ['robinhood']);
-        var socket = io.socket();
-        socket.sideB.on('dual', function (msg) {
-            assert.deepEqual(msg.to, ['redirect']);
-            assert.equal(msg.body, '/yo');
-            done();
-        });
-        c.redirectClient(socket.sideA, '/yo');
-    });
-
-    it('should disconnect client after redirect', function (done) {
-        var c = clientpool(dualapi(), ['robinhood']);
-        var socket = io.socket();
-        socket.sideB.on('disconnect', function (msg) {
-            done();
-        });
-        c.redirectClient(socket.sideA, '/yo');
+        testSocket(socket);
     });
 
 });
