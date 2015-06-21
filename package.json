@@ -1,0 +1,31 @@
+{
+  "name": "dual-engine.io",
+  "version": "0.0.0",
+  "description": "Send dual-protocol messages over engine.io connections",
+  "main": "index.js",
+  "private": false,
+  "scripts": {
+    "test": "mocha",
+    "ci-test": "istanbul cover _mocha -- -R tap \"./test/*.js\" > test.tap && istanbul report clover"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:plediii/dual-engine.io.git"
+  },
+  "keywords": [
+    "dualapi"
+  ],
+  "author": "Paul J. Ledbetter III",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/plediii/dual-engine.io.git/issues"
+  },
+  "homepage": "https://github.com/plediii/dual-engine.io.git",
+  "devDependencies": {
+    "dual-protocol": "^0.2.1",
+    "istanbul": "^0.3.14",
+    "lodash": "^3.9.3",
+    "mocha": "^1.21.4",
+    "tape": "^4.0.0"
+  }
+}
