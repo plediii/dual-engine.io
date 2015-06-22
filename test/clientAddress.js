@@ -8,7 +8,7 @@ var dualproto = require('dual-protocol');
 
 var io = require('./mock-io');
 
-describe('dual engine.io', function () {
+describe('client address', function () {
 
     var d, socket;
     beforeEach(function () {
@@ -45,12 +45,12 @@ describe('dual engine.io', function () {
     it('should give each distinct client a distinct "from" address ', function (done) {
         var count = 0;
         var from;
-        d.mount(['dalek'], function (msg) {
+        d.mount(['dalek'], function (body, ctxt) {
             count++;
             if (count === 1) {
-                from = msg.from;
+                from = ctxt.from;
             } else if (count === 2) {
-                assert.notDeepEqual(from, msg.from);
+                assert.notDeepEqual(from, ctxt.from);
                 done();
             }
         });

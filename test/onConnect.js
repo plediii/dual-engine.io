@@ -8,7 +8,7 @@ var dualproto = require('dual-protocol');
 
 var io = require('./mock-io');
 
-describe('dual engine.io', function () {
+describe('on connect', function () {
 
     var d, socket;
     beforeEach(function () {
@@ -25,12 +25,14 @@ describe('dual engine.io', function () {
     });
 
 
-    it('should send second argument as from', function (done) {
+    it('should send indexRoute', function (done) {
         socket.sideB.on('dual', function (msg) {
             assert.deepEqual(msg.from, ['robinhood']);
             done();
         });
-        d.engineio(socket.sideA, ['robinhood']);
+        d.engineio(socket.sideA, {
+            indexRoute: ['robinhood']
+        });
     });
 
     it('should send connect event', function (done) {

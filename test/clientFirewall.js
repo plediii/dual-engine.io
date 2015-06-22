@@ -8,7 +8,7 @@ var dualproto = require('dual-protocol');
 
 var io = require('./mock-io');
 
-describe('dual engine.io', function () {
+describe('client firewall', function () {
 
     var d, socket;
     beforeEach(function () {
@@ -16,69 +16,74 @@ describe('dual engine.io', function () {
         socket = io.socket();
     });
 
-    it('should call second argument on incoming messages', function (done) {
+    it('should call firewall on incoming messages', function (done) {
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
                 to: ['dalek']
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            done();
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                done();
+            }});
     });
 
-    it('should call second argument with incoming message "to"', function (done) {
+    it('should call firewall with incoming message "to"', function (done) {
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
                 to: ['dalek']
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            assert.deepEqual(['dalek'], msg.to);
-            done();
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                assert.deepEqual(['dalek'], msg.to);
+                done();
+            }});
     });
 
-    it('should call second argument with incoming message "from"', function (done) {
+    it('should call firewall with incoming message "from"', function (done) {
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
                 to: ['dalek']
                 , from: ['merci']
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            assert.deepEqual('merci', _.last(msg.from));
-            done();
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                assert.deepEqual('merci', _.last(msg.from));
+                done();
+            }});
     });
 
-    it('should call second argument with incoming message "body"', function (done) {
+    it('should call firewall with incoming message "body"', function (done) {
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
                 to: ['dalek']
                 , body: { mr: 'vicepresident' }
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            assert.deepEqual({ mr: 'vicepresident' }, msg.body);
-            done();
-        });
+        d.engineio(socket.sideA, { 
+            firewall: function (msg) {
+                assert.deepEqual({ mr: 'vicepresident' }, msg.body);
+                done();
+            }});
     });
 
-    it('should call second argument with incoming message "options"', function (done) {
+    it('should call firewall with incoming message "options"', function (done) {
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
                 to: ['dalek']
                 , options: { business: 'side' }
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            assert.deepEqual({ business: 'side' }, msg.options);
-            done();
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                assert.deepEqual({ business: 'side' }, msg.options);
+                done();
+            }});
     });
 
-    it('should send message if second argument returns"', function (done) {
+    it('should send message if firewall returns"', function (done) {
         d.mount(['dalek'], function (msg) {
             done();
         });
@@ -87,10 +92,11 @@ describe('dual engine.io', function () {
                 to: ['dalek']
             });
         });
-        d.engineio(socket.sideA, function (msg) {});
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {}});
     });
 
-    it('should *not* send message if second argument throws"', function (done) {
+    it('should *not* send message if firewall throws"', function (done) {
         d.mount(['dalek'], function (msg) {
             done('should not have sent');
         });
@@ -99,9 +105,10 @@ describe('dual engine.io', function () {
                 to: ['dalek']
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            throws 'filibuster';
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                throw 'filibuster';
+            }});
         done();
     });
 
@@ -116,12 +123,13 @@ describe('dual engine.io', function () {
                 to: ['dalek']
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            return new Promise(function (resolve) {
-                resolved = true;
-                return resolve(true);
-            });
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                return new Promise(function (resolve) {
+                    resolved = true;
+                    return resolve(true);
+                });
+            }});
     });
 
     it('should not send a message if a returned promise does not resolve', function (done) {
@@ -134,9 +142,10 @@ describe('dual engine.io', function () {
                 to: ['dalek']
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            return new Promise(function (resolve) {});
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                return new Promise(function (resolve) {});
+            }});
         done();
     });
 
@@ -149,16 +158,17 @@ describe('dual engine.io', function () {
                 to: ['dalek']
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            return new Promise(function (resolve, reject) {
-                return reject();
-            });
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                return new Promise(function (resolve, reject) {
+                    return reject();
+                });
+            }});
         done();
     });
 
-    it('should allow second argument to modify message bodies', function (done) {
-        d.mount(['dalek'], function (msg) {
+    it('should allow firewall to modify message bodies', function (done) {
+        d.mount(['dalek'], function (body, msg) {
             assert.deepEqual({ five: 'alive' }, msg.body);
             done();
         });
@@ -169,13 +179,14 @@ describe('dual engine.io', function () {
                 , options: { mountain: 'side' }
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            msg.body = { five: 'alive' };
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                msg.body = { five: 'alive' };
+            }});
     });
 
-    it('should allow second argument to modify message options', function (done) {
-        d.mount(['dalek'], function (msg) {
+    it('should allow firewall to modify message options', function (done) {
+        d.mount(['dalek'], function (body, msg) {
             assert.deepEqual({ business: 'side' }, msg.options);
             done();
         });
@@ -186,8 +197,9 @@ describe('dual engine.io', function () {
                 , options: { mountain: 'side' }
             });
         });
-        d.engineio(socket.sideA, function (msg) {
-            msg.options = { business: 'side' };
-        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                msg.options = { business: 'side' };
+            }});
     });
 });

@@ -17,7 +17,7 @@ describe('dual engine.io', function () {
     });
 
     it('should allow clients to send to mounted hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
+        d.mount(['dalek'], function () {
             done();
         });
 
@@ -30,8 +30,8 @@ describe('dual engine.io', function () {
     });
 
     it('should include "from" as tail in messages to hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
-            assert.equal('merci', _.last(msg.from));
+        d.mount(['dalek'], function (body, ctxt) {
+            assert.equal('merci', _.last(ctxt.from));
             done();
         });
         socket.sideB.on('dual', function () {
@@ -44,8 +44,8 @@ describe('dual engine.io', function () {
     });
 
     it('should include "body" in messages to hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
-            assert.deepEqual({ hello: 'hi' }, msg.body)
+        d.mount(['dalek'], function (body, ctxt) {
+            assert.deepEqual({ hello: 'hi' }, ctxt.body)
             done();
         });
 
@@ -59,14 +59,14 @@ describe('dual engine.io', function () {
     });
 
     it('should include "option" in messages to hosts', function (done) {
-        d.mount(['dalek'], function (msg) {
-            assert.deepEqual({ allo: 'salaam' }, msg.options)
+        d.mount(['dalek'], function (body, ctxt) {
+            assert.deepEqual({ allo: 'salaam' }, ctxt.options)
             done();
         });
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
                 to: ['dalek']
-                , option: { allo: 'salaam' }
+                , options: { allo: 'salaam' }
             });
         });
         d.engineio(socket.sideA);

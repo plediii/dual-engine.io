@@ -1,31 +1,47 @@
 /*jslint node: true */
 "use strict";
 
-var uid = require('uid-safe');
-
-module.exports = function (domain, indexroute, defaultFirewall) {
-
-    domain.connect = function (socket, firewall) {
-        firewall = firewall || defaultFirewall;
-        uid(24)
-            .then(function (clientid) {
-                var clientRoute = ['client', clientid];
-                socket.on('disconnect', function () {
-                    domain.send(['disconnect'].concat(clientRoute));
+module.exports = function (Domain) {
+    Domain.prototype.engineio = function (socket, options) {
+        var d = this;
+        options = options || {};
+        var indexRoute = options.indexRoute || ['index'];
+        d.uid()
+        .then(function (clientid) {
+            var clientRoute = ['engineio', clientid];
+            d.send(['connect'].concat(clientRoute))
+            var dsend = function (msg) {
+                d.send({
+                    to: msg.to
+                    , from: clientRoute.concat(msg.from || [])
+                    , body: msg.body
+                    , options: msg.options
                 });
-                domain.open(clientRoute, socket, firewall);
-                domain.send(['connect'].concat(clientRoute), []);
-                domain.send(clientRoute.concat('index'), indexroute);
+            }
+            var send;
+            if (options.hasOwnProperty('firewall')) {
+                // if a firewall is provided, use it to filter messages
+                send = function (msg) {
+                    var async = options.firewall(msg);
+                    if (async && async.then) {
+                        async.then(function () {
+                            dsend(msg)
+                        });
+                    } else {
+                        dsend(msg);
+                    }
+                };
+            } else {
+                send = dsend;
+            }
+            socket.on('dual', send);
+            socket.emit('dual', {
+                to: ['index']
+                , from: indexRoute
             });
-    };
+            socket.on('disconnect', function () {
 
-    domain.redirectClient = function (socket, where) {
-        socket.emit('dual', {
-            to: ['redirect']
-            , body: where
+            });
         });
-        socket.disconnect();
     };
-
-    return domain;
 };
