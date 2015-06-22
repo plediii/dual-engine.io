@@ -78,38 +78,9 @@ describe('dual engine.io', function () {
         });
     });
 
-    it('should send message if second argument returns true"', function (done) {
+    it('should send message if second argument returns"', function (done) {
         d.mount(['dalek'], function (msg) {
             done();
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-            });
-        });
-        d.engineio(socket.sideA, function (msg) {
-            return true;
-        });
-    });
-
-    it('should *not* send message if second argument returns false"', function (done) {
-        d.mount(['dalek'], function (msg) {
-            done('should not have sent');
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-            });
-        });
-        d.engineio(socket.sideA, function (msg) {
-            return false;
-        });
-        done();
-    });
-
-    it('should *not* send message if second argument does not return"', function (done) {
-        d.mount(['dalek'], function (msg) {
-            done('should not have sent');
         });
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
@@ -117,26 +88,9 @@ describe('dual engine.io', function () {
             });
         });
         d.engineio(socket.sideA, function (msg) {});
-        done();
     });
 
-    it('should send message if second argument returns a Promise resolving to true"', function (done) {
-        d.mount(['dalek'], function (msg) {
-            done();
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-            });
-        });
-        d.engineio(socket.sideA, function (msg) {
-            return new Promise(function (resolve) {
-                return resolve(true);
-            });
-        });
-    });
-
-    it('should *not* send if second argument returns a Promise resolving to false"', function (done) {
+    it('should *not* send message if second argument throws"', function (done) {
         d.mount(['dalek'], function (msg) {
             done('should not have sent');
         });
@@ -146,8 +100,58 @@ describe('dual engine.io', function () {
             });
         });
         d.engineio(socket.sideA, function (msg) {
+            throws 'filibuster';
+        });
+        done();
+    });
+
+    it('should send message after a returned promise resolves', function (done) {
+        var resolved = false;
+        d.mount(['dalek'], function (msg) {
+            assert(resolved);
+            done();
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, function (msg) {
             return new Promise(function (resolve) {
-                return resolve(false);
+                resolved = true;
+                return resolve(true);
+            });
+        });
+    });
+
+    it('should not send a message if a returned promise does not resolve', function (done) {
+        var resolved = false;
+        d.mount(['dalek'], function (msg) {
+            done('promise was not resolved');
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, function (msg) {
+            return new Promise(function (resolve) {});
+        });
+        done();
+    });
+
+    it('should *not* send a message if returned promise rejects "', function (done) {
+        d.mount(['dalek'], function (msg) {
+            done('message was rejected');
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, function (msg) {
+            return new Promise(function (resolve, reject) {
+                return reject();
             });
         });
         done();
@@ -156,6 +160,7 @@ describe('dual engine.io', function () {
     it('should allow second argument to modify message bodies', function (done) {
         d.mount(['dalek'], function (msg) {
             assert.deepEqual({ five: 'alive' }, msg.body);
+            done();
         });
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
@@ -166,13 +171,13 @@ describe('dual engine.io', function () {
         });
         d.engineio(socket.sideA, function (msg) {
             msg.body = { five: 'alive' };
-            return true;
         });
     });
 
     it('should allow second argument to modify message options', function (done) {
         d.mount(['dalek'], function (msg) {
             assert.deepEqual({ business: 'side' }, msg.options);
+            done();
         });
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
@@ -183,34 +188,6 @@ describe('dual engine.io', function () {
         });
         d.engineio(socket.sideA, function (msg) {
             msg.options = { business: 'side' };
-            return true;
         });
     });
-
-    it('should reuse "from" address from clients', function (done) {
-        var count = 0;
-        var from;
-        d.mount(['dalek'], function (msg) {
-            count++;
-            if (count === 1) {
-                from = msg.from;
-            } else if (count === 2) {
-                assert.deepEqual(from, msg.from);
-                done();
-            }
-        });
-        var testSocket = function (asocket) {
-            asocket.sideB.on('dual', function () {
-                asocket.sideB.emit('dual', {
-                    to: ['dalek']
-                    , body: { yo: 'hi' }
-                    , options: { mountain: 'side' }
-                });
-            });
-            d.engineio(asocket.sideA);
-        };
-        testSocket(socket);
-        testSocket(socket);
-    });
-
 });

@@ -54,8 +54,8 @@ describe('dual engine.io', function () {
     it('should send a disconnect message when client disconnects', function (done) {
         var c = clientpool(dualapi(), ['robinhood']);
         var clientRoute;
-        c.mount(['identify'], function (ctxt) {
-            c.mount(['disconnect'].concat(ctxt.from), function (ctxt) {
+        d.mount(['identify'], function (ctxt) {
+            d.mount(['disconnect'].concat(ctxt.from), function (ctxt) {
                 done();
             });
         });
@@ -69,7 +69,24 @@ describe('dual engine.io', function () {
             });
             socket.sideB.emit('disconnect');
         });
-        c.connect(socket.sideA);
+        d.engineio(socket.sideA);
+    });
+
+    it('should send disconnect with clients address', function (done) {
+        var clientAddr = false;
+        d.mount(['disconnect', '::clientAddr'], function (body, ctxt) {
+            assert.deepEqual(ctxt.params.clientAddr, clientAddr);
+        });
+        d.mount(['vp'], function (body, ctxt) {
+            clientAddr = ctxt.from;
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['vp']
+                , from: []
+            });
+        });
+        d.engineio(socket.sideA);
     });
 
 });
