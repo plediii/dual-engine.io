@@ -23,51 +23,13 @@ describe('dual engine.io', function () {
             done();
         });
         d.mount(['dalek'], function (msg) {
+            disconnected = true;
             socket.disconnect();
         });
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
                 to: ['dalek']
             });
-        });
-        d.engineio(socket.sideA);
-    });
-
-    it('should send with "disconnect" and the connections from prefix', function (done) {
-        var disconnected = false;
-        d.mount(['disconnect', '**'], function () {
-            assert(disconnected);
-            done();
-        });
-        d.mount(['dalek'], function (msg) {
-            socket.disconnect();
-        });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['dalek']
-            });
-        });
-        d.engineio(socket.sideA);
-    });
-
-
-    it('should send a disconnect message when client disconnects', function (done) {
-        var c = clientpool(dualapi(), ['robinhood']);
-        var clientRoute;
-        d.mount(['identify'], function (ctxt) {
-            d.mount(['disconnect'].concat(ctxt.from), function (ctxt) {
-                done();
-            });
-        });
-
-        var socket = io.socket();
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
-                to: ['identify']
-                , from: []
-                , body: null
-            });
-            socket.sideB.emit('disconnect');
         });
         d.engineio(socket.sideA);
     });
@@ -76,9 +38,11 @@ describe('dual engine.io', function () {
         var clientAddr = false;
         d.mount(['disconnect', '::clientAddr'], function (body, ctxt) {
             assert.deepEqual(ctxt.params.clientAddr, clientAddr);
+            done();
         });
         d.mount(['vp'], function (body, ctxt) {
             clientAddr = ctxt.from;
+            socket.disconnect();
         });
         socket.sideB.on('dual', function () {
             socket.sideB.emit('dual', {
@@ -88,5 +52,4 @@ describe('dual engine.io', function () {
         });
         d.engineio(socket.sideA);
     });
-
 });

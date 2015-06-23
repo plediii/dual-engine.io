@@ -9,7 +9,18 @@ module.exports = function (Domain) {
         d.uid()
         .then(function (clientid) {
             var clientRoute = ['engineio', clientid];
-            d.send(['connect'].concat(clientRoute))
+            socket.on('disconnect', function () {
+                d.send(['disconnect'].concat(clientRoute));
+            });
+            d.send(['connect'].concat(clientRoute));
+            d.mount(clientRoute.concat('::clientHost'), function (body, ctxt) {
+                socket.emit('dual', {
+                    to: ctxt.params.clientHost
+                    , from: ctxt.from
+                    , body: ctxt.body
+                    , options: ctxt.options
+                });
+            });
             var dsend = function (msg) {
                 d.send({
                     to: msg.to
@@ -39,9 +50,16 @@ module.exports = function (Domain) {
                 to: ['index']
                 , from: indexRoute
             });
-            socket.on('disconnect', function () {
+        });
+    };
 
-            });
+    Domain.prototype.engineio.redirect = function (socket, body) {
+        socket.emit('dual', {
+            to: ['redirect']
+            , body: body
+        });
+        process.nextTick(function () {
+            socket.disconnect();
         });
     };
 };
