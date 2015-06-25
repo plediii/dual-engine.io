@@ -5,6 +5,16 @@ module.exports = function (Domain) {
     Domain.prototype.engineio = function (socket, options) {
         var d = this;
         options = options || {};
+        options.firewall = options.firewall || function (msg, socket) {
+            // block wildcards by default
+            for (var idx in msg.to) {
+                var point = msg.to[idx];
+                if (point[0] == '*') {
+                    socket.disconnect();
+                    throw new Error('Wild card detected.');
+                }
+            };
+        };
         var indexRoute = options.indexRoute || ['index'];
         d.uid()
         .then(function (clientid) {
