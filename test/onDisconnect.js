@@ -52,4 +52,25 @@ describe('dual engine.io', function () {
         });
         d.engineio(socket.sideA);
     });
+
+    it('should not leak listeners on clientAddr', function (done) {
+        var clientAddr = false;
+        d.mount(['disconnect', '::clientAddr'], function (body, ctxt) {
+            assert.deepEqual(ctxt.params.clientAddr, clientAddr);
+            assert.equal(0, d.listeners(clientAddr.concat('**')).length);
+            done();
+        });
+        d.mount(['vp'], function (body, ctxt) {
+            clientAddr = ctxt.from;
+            assert.equal(1, d.listeners(clientAddr.concat('**')).length);
+            socket.disconnect();
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['vp']
+                , from: []
+            });
+        });
+        d.engineio(socket.sideA);
+    });
 });

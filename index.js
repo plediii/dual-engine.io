@@ -10,9 +10,9 @@ module.exports = function (Domain) {
         .then(function (clientid) {
             var clientRoute = ['engineio', clientid];
             socket.on('disconnect', function () {
+                d.unmount(clientRoute);
                 d.send(['disconnect'].concat(clientRoute));
             });
-            d.send(['connect'].concat(clientRoute));
             d.mount(clientRoute.concat('::clientHost'), function (body, ctxt) {
                 socket.emit('dual', {
                     to: ctxt.params.clientHost
@@ -21,6 +21,7 @@ module.exports = function (Domain) {
                     , options: ctxt.options
                 });
             });
+            d.send(['connect'].concat(clientRoute));
             var dsend = function (msg) {
                 d.send({
                     to: msg.to

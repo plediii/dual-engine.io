@@ -61,4 +61,25 @@ describe('on connect', function () {
         d.engineio(socket.sideA);
     });
 
+    it('should mount client address listener before sending connect event', function (done) {
+        var clientAddr = false;
+        d.mount(['vp'], function (body, ctxt) {
+            assert(clientAddr.length > 0);
+            assert.deepEqual(clientAddr, ctxt.from);
+            assert.equal(1, d.listeners(clientAddr.concat('**')).length);
+            done();
+        });
+        d.mount(['connect', '::clientAddr'], function (body, ctxt) {
+            clientAddr = ctxt.params.clientAddr;
+            assert.equal(1, d.listeners(clientAddr.concat('**')).length);
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['vp']
+                , from: []
+            });
+        });
+        d.engineio(socket.sideA);
+    });
+
 });
