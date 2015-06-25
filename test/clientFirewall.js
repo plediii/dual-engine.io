@@ -348,4 +348,60 @@ describe('client firewall', function () {
                 msg.options = { business: 'side' };
             }});
     });
+
+
+    it('should block wildcards by default (undefined options)', function (done) {
+        d.mount(['error'], function () {});
+        d.mount(['**'], function (msg, ctxt) {
+            if (ctxt.to[0] !== 'disconnect' 
+                && ctxt.to[0] !== 'connect') {
+                console.error('sent ', ctxt);
+                done('should not have sent');
+            }
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['*']
+            });
+            socket.sideB.emit('dual', {
+                to: ['**']
+            });
+            socket.sideB.emit('dual', {
+                to: ['dalek', '*']
+            });
+            socket.sideB.emit('dual', {
+                to: ['dalek', '**']
+            });
+        });
+        d.engineio(socket.sideA);
+        done();
+    });
+
+    it('should block wildcards by default (unused option)', function (done) {
+        d.mount(['error'], function () {});
+        d.mount(['**'], function (msg, ctxt) {
+            if (ctxt.to[0] !== 'disconnect'
+               && ctxt.to[0] !== 'connect') {
+                console.error('sent ', ctxt);
+                done('should not have sent');
+            }
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['*']
+            });
+            socket.sideB.emit('dual', {
+                to: ['**']
+            });
+            socket.sideB.emit('dual', {
+                to: ['dalek', '*']
+            });
+            socket.sideB.emit('dual', {
+                to: ['dalek', '**']
+            });
+        });
+        d.engineio(socket.sideA, {});
+        done();
+    });
+
 });
