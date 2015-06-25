@@ -83,6 +83,20 @@ describe('client firewall', function () {
             }});
     });
 
+    it('should call firewall with socket"', function (done) {
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+                , options: { business: 'side' }
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg, fsocket) {
+                assert.equal(socket.sideA, fsocket);
+                done();
+            }});
+    });
+
     it('should send message if firewall returns"', function (done) {
         d.mount(['dalek'], function (msg) {
             done();
@@ -97,6 +111,9 @@ describe('client firewall', function () {
     });
 
     it('should *not* send message if firewall throws"', function (done) {
+        d.mount(['error'], function () {
+            done();
+        });
         d.mount(['dalek'], function (msg) {
             done('should not have sent');
         });
@@ -109,7 +126,50 @@ describe('client firewall', function () {
             firewall: function (msg) {
                 throw 'filibuster';
             }});
-        done();
+    });
+
+    it('should send error if firewall throws"', function (done) {
+        d.mount(['error'], function (body) {
+            assert.equal(body.error, 'filibuster');
+            assert.deepEqual(body.msg, { to: ['dalek' ]});
+            assert.equal(body.socket, socket.sideA);
+            assert(_.isArray(body.client));
+            done();
+        });
+        d.mount(['dalek'], function (msg) {
+            done('should not have sent');
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                throw 'filibuster';
+            }});
+    });
+
+    it('should send error to specific engine.io error route"', function (done) {
+        d.mount(['error', 'engineio', 'firewall'], function (body) {
+            assert.equal(body.error, 'filibuster');
+            assert.deepEqual(body.msg, { to: ['dalek' ]});
+            assert.equal(body.socket, socket.sideA);
+            assert(_.isArray(body.client));
+            done();
+        });
+        d.mount(['dalek'], function (msg) {
+            done('should not have sent');
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                throw 'filibuster';
+            }});
     });
 
     it('should send message after a returned promise resolves', function (done) {
@@ -150,6 +210,9 @@ describe('client firewall', function () {
     });
 
     it('should *not* send a message if returned promise rejects "', function (done) {
+        d.mount(['error'], function (body) {
+            done();
+        });
         d.mount(['dalek'], function (msg) {
             done('message was rejected');
         });
@@ -161,10 +224,93 @@ describe('client firewall', function () {
         d.engineio(socket.sideA, {
             firewall: function (msg) {
                 return new Promise(function (resolve, reject) {
-                    return reject();
+                    return reject('congratulations');
                 });
             }});
+    });
+
+    it('should send error if firewall throws"', function (done) {
+        d.mount(['error', 'engineio', 'firewall'], function (body) {
+            assert.equal(body.error, 'congratulations');
+            assert.deepEqual(body.msg, { to: ['dalek' ]});
+            assert.equal(body.socket, socket.sideA);
+            assert(_.isArray(body.client));
+            done();
+        });
+        d.mount(['dalek'], function (msg) {
+            done('should not have sent');
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                return new Promise(function (resolve, reject) {
+                    return reject('congratulations');
+                });
+            }});
+    });
+
+    it('should *not* send firewall error if recipient throws"', function (done) {
+        d.mount(['error', 'engineio', 'firewall'], function () {
+            done('error was not a firewall error');
+        });
+        d.mount(['dalek'], function (msg) {
+            throw 'expected unhandled error';
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {}});
         done();
+    });
+
+    it('should *not* send firewall error if recipient resolves"', function (done) {
+        d.mount(['error', 'engineio', 'firewall'], function () {
+            done('error was not a firewall error');
+        });
+        d.mount(['dalek'], function (msg) {
+            throw 'expected unhandled error';
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                return Promise.resolve('no problem');
+            }});
+        done();
+    });
+
+    it('should send error to specific engine.io error route"', function (done) {
+        d.mount(['error', 'engineio', 'firewall'], function (body) {
+            assert.equal(body.error, 'congratulations');
+            assert.deepEqual(body.msg, { to: ['dalek' ]});
+            assert.equal(body.socket, socket.sideA);
+            assert(_.isArray(body.client));
+            done();
+        });
+        d.mount(['dalek'], function (msg) {
+            done('should not have sent');
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                return new Promise(function (resolve, reject) {
+                    return reject('congratulations');
+                });
+            }});
     });
 
     it('should allow firewall to modify message bodies', function (done) {
