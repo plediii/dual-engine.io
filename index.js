@@ -55,7 +55,11 @@ module.exports = function (Domain) {
                             return dsend(msg);
                         })
                             .catch(function (err) {
-                                return firewallError(err, msg);
+                                if (async.isRejected()) {
+                                    return firewallError(err, msg);
+                                } else {
+                                    throw err;
+                                }
                             });
                     } else {
                         dsend(msg);

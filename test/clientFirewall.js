@@ -253,6 +253,42 @@ describe('client firewall', function () {
             }});
     });
 
+    it('should *not* send firewall error if recipient throws"', function (done) {
+        d.mount(['error', 'engineio', 'firewall'], function () {
+            done('error was not a firewall error');
+        });
+        d.mount(['dalek'], function (msg) {
+            throw 'expected unhandled error';
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {}});
+        done();
+    });
+
+    it('should *not* send firewall error if recipient resolves"', function (done) {
+        d.mount(['error', 'engineio', 'firewall'], function () {
+            done('error was not a firewall error');
+        });
+        d.mount(['dalek'], function (msg) {
+            throw 'expected unhandled error';
+        });
+        socket.sideB.on('dual', function () {
+            socket.sideB.emit('dual', {
+                to: ['dalek']
+            });
+        });
+        d.engineio(socket.sideA, {
+            firewall: function (msg) {
+                return Promise.resolve('no problem');
+            }});
+        done();
+    });
+
     it('should send error to specific engine.io error route"', function (done) {
         d.mount(['error', 'engineio', 'firewall'], function (body) {
             assert.equal(body.error, 'congratulations');
