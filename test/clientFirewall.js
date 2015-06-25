@@ -91,8 +91,8 @@ describe('client firewall', function () {
             });
         });
         d.engineio(socket.sideA, {
-            firewall: function (msg, socket) {
-                assert.equal(socket.sideA, socket);
+            firewall: function (msg, fsocket) {
+                assert.equal(socket.sideA, fsocket);
                 done();
             }});
     });

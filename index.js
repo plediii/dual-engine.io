@@ -32,15 +32,35 @@ module.exports = function (Domain) {
             var send;
             if (options.hasOwnProperty('firewall')) {
                 // if a firewall is provided, use it to filter messages
+                var firewallError = function (err, msg) {
+                    return d.send({
+                        to: ['error', 'engineio', 'firewall']
+                        , body: {
+                            error: err
+                            , msg: msg
+                            , socket: socket
+                            , client: clientRoute
+                        }
+                    });
+                };
                 send = function (msg) {
-                    var async = options.firewall(msg);
+                    var async;
+                    try {
+                        async = options.firewall(msg, socket);
+                    } catch (err) {
+                        return firewallError(err, msg);
+                    }
                     if (async && async.then) {
                         async.then(function () {
-                            dsend(msg)
-                        });
+                            return dsend(msg);
+                        })
+                            .catch(function (err) {
+                                return firewallError(err, msg);
+                            });
                     } else {
                         dsend(msg);
                     }
+
                 };
             } else {
                 send = dsend;
