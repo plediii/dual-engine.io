@@ -21,19 +21,20 @@ describe('redirect', function () {
     });
 
     it('should respond with redirect event when connected with redirect client', function (done) {
-        socket.sideB.on('dual', function (msg) {
+        socket.clientSide.on('message', function (raw) {
+            var msg = JSON.parse(raw);
             assert.deepEqual(msg.to, ['redirect']);
             assert.equal(msg.body, '/yo');
             done();
         });
-        d.engineio.redirect(socket.sideA, '/yo');
+        d.engineio.redirect(socket.serverSide, '/yo');
     });
 
     it('should disconnect client after redirect', function (done) {
-        socket.sideB.on('disconnect', function () {
+        socket.clientSide.on('close', function () {
             done();
         });
-        d.engineio.redirect(socket.sideA, '/yo');
+        d.engineio.redirect(socket.serverSide, '/yo');
     });
 
 });

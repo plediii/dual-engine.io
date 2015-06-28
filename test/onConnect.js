@@ -17,20 +17,22 @@ describe('on connect', function () {
     });
 
     it('should send index event on connect', function (done) {
-        socket.sideB.on('dual', function (msg) {
+        socket.clientSide.on('message', function (raw) {
+            var msg = JSON.parse(raw);
             assert.deepEqual(msg.to, ['index']);
             done();
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
 
     it('should send indexRoute', function (done) {
-        socket.sideB.on('dual', function (msg) {
+        socket.clientSide.on('message', function (raw) {
+            var msg = JSON.parse(raw);
             assert.deepEqual(msg.from, ['robinhood']);
             done();
         });
-        d.engineio(socket.sideA, {
+        d.engineio(socket.serverSide, {
             indexRoute: ['robinhood']
         });
     });
@@ -39,7 +41,7 @@ describe('on connect', function () {
         d.mount(['connect', '**'], function () {
             done();
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should send connect event with client address', function (done) {
@@ -52,13 +54,13 @@ describe('on connect', function () {
         d.mount(['connect', '::clientAddr'], function (body, ctxt) {
             clientAddr = ctxt.params.clientAddr;
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['vp']
                 , from: []
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should mount client address listener before sending connect event', function (done) {
@@ -73,13 +75,13 @@ describe('on connect', function () {
             clientAddr = ctxt.params.clientAddr;
             assert.equal(1, d.listeners(clientAddr.concat('**')).length);
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['vp']
                 , from: []
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
 });

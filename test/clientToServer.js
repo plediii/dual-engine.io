@@ -21,12 +21,12 @@ describe('dual engine.io', function () {
             done();
         });
 
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek']
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should include "from" as tail in messages to hosts', function (done) {
@@ -34,13 +34,13 @@ describe('dual engine.io', function () {
             assert.equal('merci', _.last(ctxt.from));
             done();
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek']
                 , from: ['merci']
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should include "body" in messages to hosts', function (done) {
@@ -49,13 +49,13 @@ describe('dual engine.io', function () {
             done();
         });
 
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek']
                 , body: { hello: 'hi' }
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should include "option" in messages to hosts', function (done) {
@@ -63,13 +63,13 @@ describe('dual engine.io', function () {
             assert.deepEqual({ allo: 'salaam' }, ctxt.options)
             done();
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek']
                 , options: { allo: 'salaam' }
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
 
