@@ -22,16 +22,17 @@ describe('dual engine.io', function () {
             assert(disconnected);
             done();
         });
-        d.mount(['dalek'], function (msg) {
+        d.mount(['dalek'], function () {
+            console.log('disconnecting');
             disconnected = true;
             socket.disconnect();
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek']
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should send disconnect with clients address', function (done) {
@@ -44,13 +45,13 @@ describe('dual engine.io', function () {
             clientAddr = ctxt.from;
             socket.disconnect();
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['vp']
                 , from: []
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should not leak listeners on clientAddr', function (done) {
@@ -65,12 +66,12 @@ describe('dual engine.io', function () {
             assert.equal(1, d.listeners(clientAddr.concat('**')).length);
             socket.disconnect();
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['vp']
                 , from: []
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 });

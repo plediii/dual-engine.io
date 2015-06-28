@@ -22,17 +22,17 @@ describe('dual engine.io server to client', function () {
         });
 
         var count = 0;
-        socket.sideB.on('dual', function () {
+        socket.clientSide.on('message', function () {
             count++;
             if (count === 1) {
-                socket.sideB.emit('dual', {
+                socket.clientSide.send(JSON.stringify({
                     to: ['dalek']
-                });
+                }));
             } else {
                 done();
             }
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should send with stripped client address', function (done) {
@@ -41,18 +41,19 @@ describe('dual engine.io server to client', function () {
         });
 
         var count = 0;
-        socket.sideB.on('dual', function (msg) {
+        socket.clientSide.on('message', function (raw) {
+            var msg = JSON.parse(raw);
             count++;
             if (count === 1) {
-                socket.sideB.emit('dual', {
+                socket.clientSide.send(JSON.stringify({
                     to: ['dalek']
-                });
+                }));
             } else {
                 assert.deepEqual(msg.to, ['scraps']);
                 done();
             }
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should send with provided from', function (done) {
@@ -60,18 +61,19 @@ describe('dual engine.io server to client', function () {
             ctxt.send(ctxt.from.concat(['scraps']), ['captain']);
         });
         var count = 0;
-        socket.sideB.on('dual', function (msg) {
+        socket.clientSide.on('message', function (raw) {
+            var msg = JSON.parse(raw);
             count++;
             if (count === 1) {
-                socket.sideB.emit('dual', {
+                socket.clientSide.send(JSON.stringify({
                     to: ['dalek']
-                });
+                }));
             } else {
                 assert.deepEqual(msg.from, ['captain']);
                 done();
             }
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should send with provided body', function (done) {
@@ -82,18 +84,19 @@ describe('dual engine.io server to client', function () {
             });
         });
         var count = 0;
-        socket.sideB.on('dual', function (msg) {
+        socket.clientSide.on('message', function (raw) {
+            var msg = JSON.parse(raw);
             count++;
             if (count === 1) {
-                socket.sideB.emit('dual', {
+                socket.clientSide.send(JSON.stringify({
                     to: ['dalek']
-                });
+                }));
             } else {
                 assert.deepEqual(msg.body, { we: 'got' });
                 done();
             }
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
     it('should send with provided options', function (done) {
@@ -104,18 +107,19 @@ describe('dual engine.io server to client', function () {
             });
         });
         var count = 0;
-        socket.sideB.on('dual', function (msg) {
+        socket.clientSide.on('message', function (raw) {
+            var msg = JSON.parse(raw);
             count++;
             if (count === 1) {
-                socket.sideB.emit('dual', {
+                socket.clientSide.send(JSON.stringify({
                     to: ['dalek']
-                });
+                }));
             } else {
                 assert.deepEqual(msg.options, { video: 'games' });
                 done();
             }
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
     });
 
 });
