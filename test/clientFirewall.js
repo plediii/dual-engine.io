@@ -359,21 +359,21 @@ describe('client firewall', function () {
                 done('should not have sent');
             }
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['*']
-            });
-            socket.sideB.emit('dual', {
+            }));
+            socket.clientSide.send(JSON.stringify({
                 to: ['**']
-            });
-            socket.sideB.emit('dual', {
+            }));
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek', '*']
-            });
-            socket.sideB.emit('dual', {
+            }));
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek', '**']
-            });
+            }));
         });
-        d.engineio(socket.sideA);
+        d.engineio(socket.serverSide);
         done();
     });
 
@@ -386,21 +386,21 @@ describe('client firewall', function () {
                 done('should not have sent');
             }
         });
-        socket.sideB.on('dual', function () {
-            socket.sideB.emit('dual', {
+        socket.clientSide.on('dual', function () {
+            socket.clientSide.send(JSON.stringify({
                 to: ['*']
-            });
-            socket.sideB.emit('dual', {
+            }));
+            socket.clientSide.send(JSON.stringify({
                 to: ['**']
-            });
-            socket.sideB.emit('dual', {
+            }));
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek', '*']
-            });
-            socket.sideB.emit('dual', {
+            }));
+            socket.clientSide.send(JSON.stringify({
                 to: ['dalek', '**']
-            });
+            }));
         });
-        d.engineio(socket.sideA, {});
+        d.engineio(socket.serverSide, {});
         done();
     });
 
