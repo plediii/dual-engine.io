@@ -29,14 +29,14 @@ describe('client address', function () {
             }
         });
         var testSocket = function (asocket) {
-            asocket.sideB.on('dual', function () {
-                asocket.sideB.emit('dual', {
+            asocket.clientSide.on('message', function () {
+                asocket.clientSide.send(JSON.stringify({
                     to: ['dalek']
                     , body: { yo: 'hi' }
                     , options: { mountain: 'side' }
-                });
+                }));
             });
-            d.engineio(asocket.sideA);
+            d.engineio(asocket.serverSide);
         };
         testSocket(socket);
         testSocket(socket);
@@ -55,14 +55,14 @@ describe('client address', function () {
             }
         });
         var testSocket = function (asocket) {
-            asocket.sideB.on('dual', function () {
-                asocket.sideB.emit('dual', {
+            asocket.serverSide.on('message', function () {
+                asocket.serverSide.send(JSON.stringify({
                     to: ['dalek']
                     , body: { yo: 'hi' }
                     , options: { mountain: 'side' }
-                });
+                }));
             });
-            d.engineio(asocket.sideA);
+            d.engineio(asocket.clientSide);
         };
         testSocket(socket);
         testSocket(io.socket());

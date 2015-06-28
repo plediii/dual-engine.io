@@ -19,17 +19,17 @@ module.exports = function (Domain) {
         d.uid()
         .then(function (clientid) {
             var clientRoute = ['engineio', clientid];
-            socket.on('disconnect', function () {
+            socket.on('close', function () {
                 d.unmount(clientRoute);
                 d.send(['disconnect'].concat(clientRoute));
             });
             d.mount(clientRoute.concat('::clientHost'), function (body, ctxt) {
-                socket.emit('dual', {
+                socket.send(JSON.stringify({
                     to: ctxt.params.clientHost
                     , from: ctxt.from
                     , body: ctxt.body
                     , options: ctxt.options
-                });
+                }));
             });
             d.send(['connect'].concat(clientRoute));
             var dsend = function (msg) {
@@ -54,7 +54,8 @@ module.exports = function (Domain) {
                         }
                     });
                 };
-                send = function (msg) {
+                send = function (raw) {
+                    var msg = JSON.parse(raw);
                     var async;
                     try {
                         async = options.firewall(msg, socket);
@@ -78,21 +79,23 @@ module.exports = function (Domain) {
 
                 };
             } else {
-                send = dsend;
+                send = function (raw) {
+                    dsend(JSON.parse(raw));
+                };
             }
-            socket.on('dual', send);
-            socket.emit('dual', {
+            socket.on('message', send);
+            socket.send(JSON.stringify({
                 to: ['index']
                 , from: indexRoute
-            });
+            }));
         });
     };
 
     Domain.prototype.engineio.redirect = function (socket, body) {
-        socket.emit('dual', {
+        socket.send(JSON.stringify({
             to: ['redirect']
             , body: body
-        });
+        }));
         process.nextTick(function () {
             socket.disconnect();
         });
