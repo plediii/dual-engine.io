@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+// -*- mode: javascript -*-
+/*jslint node: true */
+"use strict";
+
+/**
+ * Module dependencies.
+ */
+
+var debug = require('debug')('dual-example');
+var _ = require('lodash');
+var Promise = require('bluebird');
+var express = require('express');
+var http = require('http');
+
+var config = {
+    port: process.env['PORT'] || 3000
+};
+
+
+Promise.resolve(express())
+.then(function (app) {
+    app.set('port', config.port);
+    return app;
+})
+.then(require('../app/logger'))
+.then(require('../app/express-middleware'))
+.then(require('../app/static'))
+.then(require('../app/dual'))
+.then(require('../app/handlers'))
+.then(function (app) {
+    var server = http.createServer(app);
+    app.get('io').attach(server);
+    server.listen(app.get('port'), function() {
+        console.log('Express server listening on port ' + server.address().port);
+    });
+});
+
