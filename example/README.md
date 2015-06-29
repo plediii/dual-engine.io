@@ -1,5 +1,7 @@
 # dual-engine.io example server
 
+[Live example here](http://plediii.github.io/dual-engine.io/).
+
 ## Running
 
 From the example directory, 
