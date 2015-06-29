@@ -4,13 +4,10 @@
 
 var dualapi = require('dualapi')
 .use(require('../../index'));
-var engineio = require('engine.io');
 
-module.exports = function (app) {
+module.exports = function () {
 
     var dual = dualapi();
-    app.set('io', engineio);
-    app.set('dual', dual);
 
     var addend = 0;
     dual.mount({
