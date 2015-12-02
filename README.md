@@ -1,4 +1,4 @@
-# dual-engine.io [![Build Status](http://jenkins.plediii.net:8080/buildStatus/icon?job=dual-engine.io master)](http://jenkins.plediii.net:8080/job/dual-engine.io%20master/)
+# dual-engine.io [![Build Status](https://travis-ci.org/plediii/dual-engine.io.svg)](https://travis-ci.org/plediii/dual-engine.io)
 
 Allows a [`dualapi`](https://github.com/plediii/dualapi) domain
 mounted on a server side to communicate with a `dualapi` domain
