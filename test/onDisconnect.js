@@ -25,7 +25,7 @@ describe('dual engine.io', function () {
         d.mount(['dalek'], function () {
             console.log('disconnecting');
             disconnected = true;
-            socket.disconnect();
+            socket.close();
         });
         socket.clientSide.on('message', function () {
             socket.clientSide.send(JSON.stringify({
@@ -43,7 +43,7 @@ describe('dual engine.io', function () {
         });
         d.mount(['vp'], function (body, ctxt) {
             clientAddr = ctxt.from;
-            socket.disconnect();
+            socket.close();
         });
         socket.clientSide.on('message', function () {
             socket.clientSide.send(JSON.stringify({
@@ -64,7 +64,7 @@ describe('dual engine.io', function () {
         d.mount(['vp'], function (body, ctxt) {
             clientAddr = ctxt.from;
             assert.equal(1, d.listeners(clientAddr.concat('**')).length);
-            socket.disconnect();
+            socket.close();
         });
         socket.clientSide.on('message', function () {
             socket.clientSide.send(JSON.stringify({
