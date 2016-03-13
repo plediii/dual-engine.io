@@ -10,7 +10,7 @@ module.exports = function (Domain) {
             for (var idx in msg.to) {
                 var point = msg.to[idx];
                 if (point[0] == '*') {
-                    socket.disconnect();
+                    socket.close();
                     throw new Error('Wild card detected.');
                 }
             };
@@ -97,7 +97,7 @@ module.exports = function (Domain) {
             , body: body
         }));
         process.nextTick(function () {
-            socket.disconnect();
+            socket.close();
         });
     };
 };
