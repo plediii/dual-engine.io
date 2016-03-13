@@ -33,6 +33,7 @@ var socket = function () {
         send: function (msg) {
             if (connected) { 
                 clientSideemit('message', msg);
+                serverSideemit('drain');
             }
         }
         , close: socketDisconnect
@@ -43,6 +44,7 @@ var socket = function () {
         send: function (msg) {
             if (connected) {
                 serverSideemit('message', msg);
+                clientSideemit('drain');
             }
         }
         , close: socketDisconnect
