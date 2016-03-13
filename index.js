@@ -92,12 +92,12 @@ module.exports = function (Domain) {
     };
 
     Domain.prototype.engineio.redirect = function (socket, body) {
+        socket.on('drain', function () {
+            socket.close();
+        });
         socket.send(JSON.stringify({
             to: ['redirect']
             , body: body
         }));
-        process.nextTick(function () {
-            socket.close();
-        });
     };
 };
