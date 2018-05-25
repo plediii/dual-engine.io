@@ -1,6 +1,6 @@
 {
   "name": "dual-engine.io",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Send dual-protocol messages over engine.io connections",
   "main": "index.js",
   "private": false,
