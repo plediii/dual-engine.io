@@ -72,5 +72,32 @@ describe('dual engine.io', function () {
         d.engineio(socket.serverSide);
     });
 
+    it('should not crash on improper message format', function (done) {
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send('im not json');
+            done();
+        });
+        d.engineio(socket.serverSide);
+    }); 
+    
+    it('should send an error event on improper message format', function (done) {
+       d.mount(['error', 'engineio', 'format'], function (body) {
+            assert.equal(body.socket, socket.serverSide);
+            done();
+        });
+        socket.clientSide.on('message', function () {
+            socket.clientSide.send('im not json');
+        });
+        d.engineio(socket.serverSide);
+    });
 
+    it('should disconnect on improper message format', function (done) {
+        d.mount(['disconnect', '**'], function (body, ctxt) {
+            done();
+        });
+         socket.clientSide.on('message', function () {
+             socket.clientSide.send('im not json');
+         });
+         d.engineio(socket.serverSide);
+     });    
 });

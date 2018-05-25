@@ -41,6 +41,30 @@ module.exports = function (Domain) {
                 });
             }
             var send;
+            var messageFormatError = function (err, msg) {
+                socket.close();
+                return d.send({
+                    to: ['error', 'engineio', 'format']
+                    , body: {
+                        error: err
+                        , msg: msg
+                        , socket: socket
+                        , client: clientRoute
+                    }
+                });
+            };
+            var messageParser = function (handler) {
+                var receiver = function (raw) {
+                    var msg;
+                    try {
+                        msg = JSON.parse(raw);
+                    } catch (err) {
+                        return messageFormatError(err, raw);
+                    }
+                    return handler(msg);
+                };
+                return receiver;
+            };
             if (options.hasOwnProperty('firewall')) {
                 // if a firewall is provided, use it to filter messages
                 var firewallError = function (err, msg) {
@@ -54,8 +78,8 @@ module.exports = function (Domain) {
                         }
                     });
                 };
-                send = function (raw) {
-                    var msg = JSON.parse(raw);
+                send = function (msg) {
+                    var msg;
                     var async;
                     try {
                         async = options.firewall(msg, socket);
@@ -79,11 +103,11 @@ module.exports = function (Domain) {
 
                 };
             } else {
-                send = function (raw) {
-                    dsend(JSON.parse(raw));
+                send = function (msg) {
+                    dsend(msg);
                 };
             }
-            socket.on('message', send);
+            socket.on('message', messageParser(send));
             socket.send(JSON.stringify({
                 to: ['index']
                 , from: indexRoute
